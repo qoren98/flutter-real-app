@@ -23,6 +23,9 @@ class RestaurantCard extends StatelessWidget {
   // 상세 페이지 여부
   final bool isDetail;
 
+  // Hero 위젯 태그
+  final String? heroKey;
+
   const RestaurantCard({
     required this.image,
     required this.name,
@@ -33,6 +36,7 @@ class RestaurantCard extends StatelessWidget {
     required this.ratings,
     this.detail,
     this.isDetail = false,
+    this.heroKey,
     super.key,
   });
 
@@ -45,6 +49,7 @@ class RestaurantCard extends StatelessWidget {
         model.thumbUrl,
         fit: BoxFit.cover,
       ),
+      heroKey: model.id,
       name: model.name,
       tags: model.tags,
       ratingsCount: model.ratingsCount,
@@ -58,73 +63,78 @@ class RestaurantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          isDetail
-              ? image
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: image,
-                ),
-          const SizedBox(
-            height: 16.0,
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: isDetail ? 16.0 : 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Text(
-                  tags.join(' · '),
-                  style: const TextStyle(
-                    color: BODY_TEXT_COLOR,
-                    fontSize: 14.0,
-                  ),
-                ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Row(
-                  children: [
-                    _IconText(
-                      icon: Icons.star,
-                      label: ratings.toString(),
-                    ),
-                    _IconText(
-                      icon: Icons.receipt,
-                      label: ratingsCount.toString(),
-                    ),
-                    _IconText(
-                      icon: Icons.timelapse_outlined,
-                      label: '$deliveryTime분',
-                    ),
-                    _IconText(
-                      icon: Icons.monetization_on,
-                      label: deliveryFee == 0 ? '무료' : '$deliveryFee원',
-                    ),
-                  ],
-                ),
-                if (detail != null && isDetail)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(detail!),
-                  ),
-              ],
+    return Column(
+      children: [
+        if (heroKey != null)
+          Hero(
+            tag: ObjectKey(heroKey),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(isDetail ? 0 : 12),
+              child: image,
             ),
           ),
-        ],
-      ),
+        if (heroKey == null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(isDetail ? 0 : 12),
+            child: image,
+          ),
+        const SizedBox(
+          height: 16.0,
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: isDetail ? 16.0 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(
+                height: 8.0,
+              ),
+              Text(
+                tags.join(' · '),
+                style: const TextStyle(
+                  color: BODY_TEXT_COLOR,
+                  fontSize: 14.0,
+                ),
+              ),
+              const SizedBox(
+                height: 8.0,
+              ),
+              Row(
+                children: [
+                  _IconText(
+                    icon: Icons.star,
+                    label: ratings.toString(),
+                  ),
+                  _IconText(
+                    icon: Icons.receipt,
+                    label: ratingsCount.toString(),
+                  ),
+                  _IconText(
+                    icon: Icons.timelapse_outlined,
+                    label: '$deliveryTime분',
+                  ),
+                  _IconText(
+                    icon: Icons.monetization_on,
+                    label: deliveryFee == 0 ? '무료' : '$deliveryFee원',
+                  ),
+                ],
+              ),
+              if (detail != null && isDetail)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text(detail!),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
