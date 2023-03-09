@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_real_app/common/layout/default_layout.dart';
 import 'package:flutter_real_app/product/component/product_card.dart';
+import 'package:flutter_real_app/rating/component/rating_card.dart';
+import 'package:flutter_real_app/rating/model/rating_model.dart';
 import 'package:flutter_real_app/restaurant/component/restaurant_card.dart';
 import 'package:flutter_real_app/restaurant/model/restaurant_detail_model.dart';
 import 'package:flutter_real_app/restaurant/model/restaurant_model.dart';
 import 'package:flutter_real_app/restaurant/provider/restaurant_provider.dart';
+import 'package:flutter_real_app/restaurant/provider/restaurant_rating_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletons/skeletons.dart';
+
+import '../../common/model/cursor_pagination_model.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final String id;
@@ -32,6 +37,9 @@ class _RestaurantDetailScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(restaurantDetailProvider(widget.id));
+    final ratingsState = ref.watch(restaurantRatingProvider(widget.id));
+    print(ratingsState);
+
     if (state == null) {
       return const DefaultLayout(
         child: Center(
@@ -51,7 +59,27 @@ class _RestaurantDetailScreenState
           if (state is RestaurantDetailModel) renderLabel(),
           if (state is RestaurantDetailModel)
             renderProducts(products: state.products),
+          if (ratingsState is CursorPaginationModel<RatingModel>)
+            renderRatings(
+              models: ratingsState.data,
+            ),
         ],
+      ),
+    );
+  }
+
+  SliverPadding renderRatings({
+    required List<RatingModel> models,
+  }) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (_, index) => RatingCard.fromModel(
+            model: models[index],
+          ),
+          childCount: models.length,
+        ),
       ),
     );
   }
