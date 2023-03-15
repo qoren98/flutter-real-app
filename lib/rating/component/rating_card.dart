@@ -24,9 +24,9 @@ class RatingCard extends StatelessWidget {
   }) {
     return RatingCard(
       avatarImage: NetworkImage(model.user.imageUrl),
-      images: model.imageUrls.map((e) => Image.network(e)).toList(),
+      images: model.imgUrls.map((e) => Image.network(e)).toList(),
       rating: model.rating,
-      email: model.user.userName,
+      email: model.user.username,
       content: model.content,
     );
   }
@@ -43,12 +43,17 @@ class RatingCard extends StatelessWidget {
         const SizedBox(
           height: 8.0,
         ),
-        _Body(content: content),
+        _Body(
+          content: content,
+        ),
         if (images.isNotEmpty)
-          SizedBox(
-            height: 100,
-            child: _Images(
-              images: images,
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: SizedBox(
+              height: 100,
+              child: _Images(
+                images: images,
+              ),
             ),
           ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_real_app/common/layout/default_layout.dart';
+import 'package:flutter_real_app/common/utils/pagination_utils.dart';
 import 'package:flutter_real_app/product/component/product_card.dart';
 import 'package:flutter_real_app/rating/component/rating_card.dart';
 import 'package:flutter_real_app/rating/model/rating_model.dart';
@@ -28,17 +29,30 @@ class RestaurantDetailScreen extends ConsumerStatefulWidget {
 
 class _RestaurantDetailScreenState
     extends ConsumerState<RestaurantDetailScreen> {
+  final ScrollController controller = ScrollController();
+
   @override
   void initState() {
     super.initState();
     ref.read(restaurantProvider.notifier).getDetail(id: widget.id);
+    controller.addListener(listener);
+  }
+
+  void listener() {
+    PaginationUtils.paginate(
+      controller: controller,
+      provider: ref.read(
+        restaurantRatingProvider(widget.id).notifier,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(restaurantDetailProvider(widget.id));
     final ratingsState = ref.watch(restaurantRatingProvider(widget.id));
-    print(ratingsState);
+
+    //print(ratingsState);
 
     if (state == null) {
       return const DefaultLayout(
@@ -51,14 +65,24 @@ class _RestaurantDetailScreenState
     return DefaultLayout(
       title: '불타는 떡볶이',
       child: CustomScrollView(
+        controller: controller,
         slivers: [
           renderTop(
             model: state,
           ),
           if (state is! RestaurantDetailModel) renderLoading(),
-          if (state is RestaurantDetailModel) renderLabel(),
+          if (state is RestaurantDetailModel) renderLabel('메뉴'),
           if (state is RestaurantDetailModel)
             renderProducts(products: state.products),
+          const SliverPadding(
+            padding: EdgeInsets.only(
+              top: 16.0,
+            ),
+          ),
+          if (ratingsState is! CursorPaginationModel<RatingModel>)
+            renderLoading(),
+          if (ratingsState is CursorPaginationModel<RatingModel>)
+            renderLabel('리뷰'),
           if (ratingsState is CursorPaginationModel<RatingModel>)
             renderRatings(
               models: ratingsState.data,
@@ -72,11 +96,17 @@ class _RestaurantDetailScreenState
     required List<RatingModel> models,
   }) {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 16.0,
+      ),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate(
-          (_, index) => RatingCard.fromModel(
-            model: models[index],
+          (_, index) => Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: RatingCard.fromModel(
+              model: models[index],
+            ),
           ),
           childCount: models.length,
         ),
@@ -115,13 +145,18 @@ class _RestaurantDetailScreenState
     );
   }
 
-  SliverPadding renderLabel() {
-    return const SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
+  SliverPadding renderLabel(String label) {
+    return SliverPadding(
+      padding: const EdgeInsets.only(
+        left: 16.0,
+        right: 16.0,
+        top: 16.0,
+        bottom: 4.0,
+      ),
       sliver: SliverToBoxAdapter(
         child: Text(
-          '메뉴',
-          style: TextStyle(
+          label,
+          style: const TextStyle(
             fontSize: 18.0,
             fontWeight: FontWeight.w700,
           ),
@@ -141,7 +176,7 @@ class _RestaurantDetailScreenState
             final model = products[index];
             return Padding(
               padding: const EdgeInsets.only(top: 16.0),
-              child: ProductCard.fromModel(
+              child: ProductCard.fromRestaurantProductModel(
                 model: model,
               ),
             );

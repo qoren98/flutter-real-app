@@ -3,6 +3,7 @@ import 'package:flutter_real_app/common/provider/pagination_provider.dart';
 import 'package:flutter_real_app/restaurant/model/restaurant_model.dart';
 import 'package:flutter_real_app/restaurant/repository/restaurant_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
 
 final restaurantDetailProvider =
     Provider.family<RestaurantModel?, String>((ref, id) {
@@ -10,7 +11,9 @@ final restaurantDetailProvider =
   if (state is! CursorPaginationModel) {
     return null;
   }
-  return state.data.firstWhere(
+
+  // firstWhereOrNull함수는 결과에 데이터가 없으면 null을 반환한다.
+  return state.data.firstWhereOrNull(
     (element) => element.id == id,
   );
 });
@@ -30,7 +33,7 @@ class RestaurantStateNotifier
   });
 
   void getDetail({required String id}) async {
-    // 만약에 아직 데이터가 하나도 없는 상태라면(CursorPagination이 아니라면)
+    // 만약 아직 데이터가 하나도 없는 상태라면(CursorPagination이 아니라면)
     // 데이터를 가져오는 시도를 한다.
     if (state is! CursorPaginationModel) {
       await paginate();
@@ -42,15 +45,29 @@ class RestaurantStateNotifier
     }
     // 여기까지 코드가 실행되면 우리가 가진 데이터가
     // CursorPaginationModel임을 확신할 수 있다.
-    // pstate.data가 [RestaurantModel(1), RestaurantModel(2), RestaurantModel(3)]이라고 하면,
-    // getDetail(id: 2)라는 함수를 실행하면
-    // [RestaurantModel(1), RestaurantDetailModel(2), RestaurantModel(3)]로 반환된다.
     final pState = state as CursorPaginationModel;
     final resp = await repository.getRestaurantDetail(id: id);
-    state = pState.copyWith(
-      data: pState.data
-          .map<RestaurantModel>((e) => e.id == id ? resp : e)
-          .toList(),
-    );
+
+    if (pState.data.where((element) => element.id == id).isEmpty) {
+      // pstate.data가 [RestaurantModel(1), RestaurantModel(2), RestaurantModel(3)]이라고 하면,
+      // getDetail(id: 10)라는 함수를 실행하면
+      // [RestaurantModel(1), RestaurantModel(2), RestaurantModel(3),
+      // RestaurantDetailModel(10)]로 반환된다.
+      state = pState.copyWith(
+        data: <RestaurantModel>[
+          ...pState.data,
+          resp,
+        ],
+      );
+    } else {
+      // pstate.data가 [RestaurantModel(1), RestaurantModel(2), RestaurantModel(3)]이라고 하면,
+      // getDetail(id: 2)라는 함수를 실행하면
+      // [RestaurantModel(1), RestaurantDetailModel(2), RestaurantModel(3)]로 반환된다.
+      state = pState.copyWith(
+        data: pState.data
+            .map<RestaurantModel>((e) => e.id == id ? resp : e)
+            .toList(),
+      );
+    }
   }
 }
