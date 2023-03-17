@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 import 'package:flutter_real_app/common/secure_storage/secure_storage.dart';
+import 'package:flutter_real_app/user/provider/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_real_app/common/const/data.dart';
@@ -10,7 +11,7 @@ final dioProvider = Provider<Dio>((ref) {
   final storage = ref.watch(secureStorageProvider);
 
   dio.interceptors.add(
-    CustomInterceptor(storage: storage),
+    CustomInterceptor(storage: storage, ref: ref),
   );
 
   return dio;
@@ -18,9 +19,11 @@ final dioProvider = Provider<Dio>((ref) {
 
 class CustomInterceptor extends Interceptor {
   final FlutterSecureStorage storage;
+  final Ref ref;
 
   CustomInterceptor({
     required this.storage,
+    required this.ref,
   });
 
   // 1) 요청 보낼 때
@@ -103,8 +106,17 @@ class CustomInterceptor extends Interceptor {
         // 똑같은 요청에 대해 accessToken만 바꾸어
         // 재전송함으로써 에러가 발생하지 않은 것처럼 응답을 다시 보낼 수 있다.
         return handler.resolve(secondResponse);
-      } catch (e) {
-        return handler.reject(err);
+      } on DioError catch (e) {
+        // 아래와 같이 userMeProvider의 logout 함수를 통해
+        // 로그아웃을 구현하려고 하면
+        // 순환 반복 에러(circular dependency error)기 발생한다.
+        // dio와 userMeProvider가 각작의 함수 안에서
+        // 서로를 필수적으로 사용하도록 돼 있기 때문이다.
+        // ref.read(userMeProvider.notifier).logout();
+
+        // authProvider에 logout 함수를 넣어 두면 이 오류를 피할 수 있다.
+        ref.read(authProvider.notifier).logout();
+        return handler.reject(e);
       }
     }
 
