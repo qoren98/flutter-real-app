@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_real_app/common/view/root_tab.dart';
 import 'package:flutter_real_app/common/view/splash_screen.dart';
+import 'package:flutter_real_app/restaurant/view/basket_screen.dart';
 import 'package:flutter_real_app/restaurant/view/restaurant_detail_screen.dart';
 import 'package:flutter_real_app/user/model/user_model.dart';
 import 'package:flutter_real_app/user/provider/user_me_provider.dart';
@@ -41,6 +42,16 @@ class AuthProvider extends ChangeNotifier {
           ],
         ),
         GoRoute(
+          path: '/basket',
+          name: BasketScreen.routeName,
+          builder: (_, state) => const BasketScreen(),
+        ),
+        // GoRoute(
+        //   path: '/order_done',
+        //   name: OrderDoneScreen.routeName,
+        //   builder: (_, state) => OrderDoneScreen(),
+        // ),
+        GoRoute(
           path: '/splash',
           name: SplashScreen.routeName,
           builder: (_, __) => const SplashScreen(),
@@ -57,38 +68,35 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // SplashScreen
-  // 앱을 처음 시작했을 때 토큰이 존재하는지 확인하고
-  // 로그인 스크린으로 보내줄지, 홈스크린으로 보내줄 지
-  // 확인하는 과정이 필요
+  // 앱을 처음 시작했을때
+  // 토큰이 존재하는지 확인하고
+  // 로그인 스크린으로 보내줄지
+  // 홈 스크린으로 보내줄지 확인하는 과정이 필요하다.
   Future<String?> redirectLogic(BuildContext _, GoRouterState state) async {
     final UserModelBase? user = ref.read(userMeProvider);
-    final loggingIn = state.location == '/login';
 
-    // =========================
-    // user가 null인 경우
-    // =========================
-    // user 정보가 없는데 로그인 중이라면
-    // 그대로 로그인 페이지에 두고
-    // 로그인 중이 아니라면
-    // 로그인 페이지로 이동
+    final logginIn = state.location == '/login';
+
+    // 유저 정보가 없는데
+    // 로그인중이면 그대로 로그인 페이지에 두고
+    // 만약에 로그인중이 아니라면 로그인 페이지로 이동
     if (user == null) {
-      return loggingIn ? null : '/login';
+      return logginIn ? null : '/login';
     }
 
-    // =========================
-    // user가 null이 아닌 경우
-    // =========================
+    // user가 null이 아님
 
-    // user가 UserModel인 경우
-    // 로그인 중이거나 현재 위치가 SlashScreen이면
-    // Home으로 이동
+    // UserModel
+    // 사용자 정보가 있는 상태면
+    // 로그인 중이거나 현재 위치가 SplashScreen이면
+    // 홈으로 이동
     if (user is UserModel) {
-      return loggingIn || state.location == '/splash' ? '/' : null;
+      return logginIn || state.location == '/splash' ? '/' : null;
     }
 
-    // user가 UserModelError일 경우
+    // UserModelError
     if (user is UserModelError) {
-      return !loggingIn ? '/' : null;
+      return !logginIn ? '/login' : null;
     }
 
     return null;

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter_real_app/common/const/data.dart';
 import 'package:flutter_real_app/common/secure_storage/secure_storage.dart';
 import 'package:flutter_real_app/user/model/user_model.dart';
@@ -35,6 +37,12 @@ class UserMeStateNotifier extends StateNotifier<UserModelBase?> {
   }
 
   Future<void> getMe() async {
+    // splash 화면에서 바로 dio에러가 발생할 경우
+    // 아래 코드를 한 번 실행 후 재실행해 볼 것
+    // refreshToken과 accessToken이 storage에 남아 있지만
+    // 유효기간이 만료된 경우 발생하는 오류인 것으로 보임
+    // await storage.deleteAll();
+
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);
 
@@ -45,10 +53,12 @@ class UserMeStateNotifier extends StateNotifier<UserModelBase?> {
 
     try {
       final resp = await repository.getMe();
+
       state = resp;
     } catch (e, stack) {
       print(e);
       print(stack);
+
       state = null;
     }
   }
