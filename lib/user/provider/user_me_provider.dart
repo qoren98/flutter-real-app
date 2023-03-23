@@ -41,7 +41,7 @@ class UserMeStateNotifier extends StateNotifier<UserModelBase?> {
     // 아래 코드를 한 번 실행 후 재실행해 볼 것
     // refreshToken과 accessToken이 storage에 남아 있지만
     // 유효기간이 만료된 경우 발생하는 오류인 것으로 보임
-    // await storage.deleteAll();
+    await storage.deleteAll();
 
     final refreshToken = await storage.read(key: REFRESH_TOKEN_KEY);
     final accessToken = await storage.read(key: ACCESS_TOKEN_KEY);

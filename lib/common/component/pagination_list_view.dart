@@ -96,29 +96,37 @@ class _PaginationListViewState<T extends IModelWithId>
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: ListView.separated(
-        controller: controller,
-        itemCount: cp.data.length + 1,
-        itemBuilder: (_, index) {
-          if (index == cp.data.length) {
-            return Padding(
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: cp is CursorPaginationModelFetchingMore
-                    ? const CircularProgressIndicator()
-                    : const Text("마지막 데이터입니다."),
-              ),
-            );
-          }
+      child: RefreshIndicator(
+        onRefresh: () async {
+          ref.read(widget.provider.notifier).paginate(
+                forceRefetch: true,
+              );
+        },
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          controller: controller,
+          itemCount: cp.data.length + 1,
+          itemBuilder: (_, index) {
+            if (index == cp.data.length) {
+              return Padding(
+                padding: const EdgeInsets.all(32),
+                child: Center(
+                  child: cp is CursorPaginationModelFetchingMore
+                      ? const CircularProgressIndicator()
+                      : const Text("마지막 데이터입니다."),
+                ),
+              );
+            }
 
-          final item = cp.data[index];
-          return widget.itemBuilder(context, index, item);
-        },
-        separatorBuilder: (_, index) {
-          return const SizedBox(
-            height: 16.0,
-          );
-        },
+            final item = cp.data[index];
+            return widget.itemBuilder(context, index, item);
+          },
+          separatorBuilder: (_, index) {
+            return const SizedBox(
+              height: 16.0,
+            );
+          },
+        ),
       ),
     );
   }

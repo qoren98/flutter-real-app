@@ -10,6 +10,9 @@ class PatchBasketBody {
     required this.basket,
   });
 
+  factory PatchBasketBody.fromJson(Map<String, dynamic> json) =>
+      _$PatchBasketBodyFromJson(json);
+
   Map<String, dynamic> toJson() => _$PatchBasketBodyToJson(this);
 }
 
